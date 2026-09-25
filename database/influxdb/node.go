@@ -178,7 +178,17 @@ func (conn *Connection) InsertNode(node *runtime.Node) {
 		tags.SetString("frequency"+suffix, strconv.Itoa(int(airtime.Frequency)))
 	}
 
+	// Neanderfunk-Erweiterung (lokaler Patch), vor dem Schreiben des Knotens
+	nf := stats.Neanderfunk
+	if nf != nil {
+		nfNodeFields(nf, fields)
+	}
+
 	conn.addPoint(MeasurementNode, tags, fields, time)
+
+	if nf != nil {
+		conn.nfPoints(nf, tags, time)
+	}
 
 	// Add DHCP statistics
 	if dhcp := stats.DHCP; dhcp != nil {

@@ -34,6 +34,8 @@ type Statistics struct {
 	Switch    map[string]*SwitchPort `json:"switch,omitempty"`
 	Wireless  WirelessStatistics     `json:"wireless,omitempty"`
 	ProcStats *ProcStats             `json:"stat,omitempty"`
+	// Neanderfunk-Erweiterung, siehe statistics_neanderfunk.go
+	Neanderfunk *NeanderfunkStatistics `json:"neanderfunk,omitempty"`
 }
 
 // MeshVPNPeerLink struct
