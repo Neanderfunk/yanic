@@ -14,6 +14,7 @@ nachziehen.
 | statistics.neanderfunk | Werte des Gluon-Pakets neanderfunk-respondd in die Zeitreihen |
 | Clients der Accesspoints beim Router abziehen | Clients hinter einem AP zählen einmal, nicht beim AP und beim Router |
 | Links der Accesspoints von beiden Seiten | Linie zwischen AP und Router mit voller Qualität, als Kabel |
+| Links zwischen zwei Accesspoints als Funk | AP-AP (UniFi-Mesh) bleibt Funk, nur AP-Router wird Kabel |
 
 Die beiden letzten gehören zu
 [Neanderfunk/unifi_respondd](https://github.com/Neanderfunk/unifi_respondd):
