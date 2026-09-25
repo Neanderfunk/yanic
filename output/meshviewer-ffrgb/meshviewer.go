@@ -29,6 +29,14 @@ func transform(nodes *runtime.Nodes) *Meshviewer {
 			continue
 		}
 
+		// Lokaler Zusatz (Neanderfunk): den Link eines Accesspoints zu seinem
+		// Router meldet nur der AP, fuer den Router ist er ein LAN-Geraet.
+		// Die fehlende Seite bekaeme TQ 0, und meshviewer faerbte die Linie
+		// nach dem Mittel beider Seiten wie eine halbe Verbindung. Der Typ
+		// bliebe "unknown", weil die Router-MAC keine Mesh-Schnittstelle ist;
+		// es ist aber immer ein Kabel am LAN des Routers.
+		accessPoint := nodes.IsAccessPoint(nodeOrigin)
+
 		for _, linkOrigin := range nodes.NodeLinks(nodeOrigin) {
 			var key string
 			// keep source and target in the same order
@@ -64,6 +72,12 @@ func transform(nodes *runtime.Nodes) *Meshviewer {
 				link.TargetTQ = linkOrigin.TQ
 				link.Target = linkOrigin.SourceID
 				link.TargetAddress = linkOrigin.SourceAddress
+			}
+
+			if accessPoint {
+				link.SourceTQ = linkOrigin.TQ
+				link.TargetTQ = linkOrigin.TQ
+				link.Type = runtime.OtherLinkType.String()
 			}
 
 			links[key] = link
