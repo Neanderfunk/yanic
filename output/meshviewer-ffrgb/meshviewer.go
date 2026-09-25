@@ -34,7 +34,9 @@ func transform(nodes *runtime.Nodes) *Meshviewer {
 		// Die fehlende Seite bekaeme TQ 0, und meshviewer faerbte die Linie
 		// nach dem Mittel beider Seiten wie eine halbe Verbindung. Der Typ
 		// bliebe "unknown", weil die Router-MAC keine Mesh-Schnittstelle ist;
-		// es ist aber immer ein Kabel am LAN des Routers.
+		// es ist aber immer ein Kabel am LAN des Routers. Links zwischen zwei
+		// APs dagegen sind deren eigenes Funk-Mesh (UniFi meldet dort den
+		// Uplink per Funk); die melden beide Seiten selbst.
 		accessPoint := nodes.IsAccessPoint(nodeOrigin)
 
 		for _, linkOrigin := range nodes.NodeLinks(nodeOrigin) {
@@ -75,9 +77,13 @@ func transform(nodes *runtime.Nodes) *Meshviewer {
 			}
 
 			if accessPoint {
-				link.SourceTQ = linkOrigin.TQ
-				link.TargetTQ = linkOrigin.TQ
-				link.Type = runtime.OtherLinkType.String()
+				if nodes.IsAccessPoint(nodes.List[linkOrigin.TargetID]) {
+					link.Type = runtime.WirelessLinkType.String()
+				} else {
+					link.SourceTQ = linkOrigin.TQ
+					link.TargetTQ = linkOrigin.TQ
+					link.Type = runtime.OtherLinkType.String()
+				}
 			}
 
 			links[key] = link

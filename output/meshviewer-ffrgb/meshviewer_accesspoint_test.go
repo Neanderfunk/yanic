@@ -52,3 +52,48 @@ func TestTransformAccessPointLinkBeidseitig(t *testing.T) {
 	assert.Equal("other", link.Type)
 	assert.ElementsMatch([]string{"router", "ap1"}, []string{link.Source, link.Target})
 }
+
+// Zwei APs, die sich per Funk-Mesh gegenseitig als Uplink melden, und ein
+// Router: AP-Router als Kabel mit voller Qualitaet, AP-AP als Funk.
+func TestTransformAccessPointMeshUntereinander(t *testing.T) {
+	assert := assert.New(t)
+
+	nodes := runtime.NewNodes(&runtime.NodesConfig{})
+	nodes.AddNode(&runtime.Node{
+		Online: true,
+		Nodeinfo: nodeinfoAusJSON(t, `{"node_id":"router","network":{"mac":"aa:aa:aa:aa:aa:01"},
+			"software":{"firmware":{"base":"gluon-v2023.2.5"}}}`),
+	})
+	for _, ap := range []struct{ id, mac, uplink string }{
+		{"ap1", "0c:ea:14:00:00:01", "0c:ea:14:00:00:02"},
+		{"ap2", "0c:ea:14:00:00:02", "0c:ea:14:00:00:01"},
+	} {
+		nodes.AddNode(&runtime.Node{
+			Online: true,
+			Nodeinfo: nodeinfoAusJSON(t, `{"node_id":"`+ap.id+`","network":{"mac":"`+ap.mac+`",
+				"mesh":{"bat0":{"interfaces":{"other":["`+ap.mac+`"]}}}},
+				"software":{"firmware":{"base":"UniFi"}}}`),
+			Neighbours: &data.Neighbours{
+				NodeID: ap.id,
+				Batadv: map[string]data.BatadvNeighbours{
+					ap.mac: {Neighbours: map[string]data.BatmanLink{
+						"aa:aa:aa:aa:aa:01": {TQ: 255},
+						ap.uplink:           {TQ: 255},
+					}},
+				},
+			},
+		})
+	}
+
+	meshviewer := transform(nodes)
+	assert.Len(meshviewer.Links, 3)
+	for _, link := range meshviewer.Links {
+		assert.Equal(float32(1), link.SourceTQ)
+		assert.Equal(float32(1), link.TargetTQ)
+		if link.Source == "router" || link.Target == "router" {
+			assert.Equal("other", link.Type)
+		} else {
+			assert.Equal("wifi", link.Type)
+		}
+	}
+}

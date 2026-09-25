@@ -129,3 +129,20 @@ func TestAccessPointGesamtstatistikZaehltEinmal(t *testing.T) {
 	stats := NewGlobalStats(nodes, map[string][]string{})
 	assert.Equal(uint32(20), stats[GLOBAL_SITE][GLOBAL_DOMAIN].Clients)
 }
+
+// Meldet ein AP neben dem Router einen anderen AP als Nachbarn (UniFi-Mesh),
+// ist sein Router trotzdem der Freifunk-Router.
+func TestAccessPointRouterNichtDerNachbarAP(t *testing.T) {
+	assert := assert.New(t)
+	nodes := NewNodes(&NodesConfig{})
+
+	nodes.Update("router", routerResponse(t, 20, 0, 0))
+	nodes.Update("ap2", apResponse(t, "ap2", "0c:ea:14:00:00:02", "UniFi", "aa:aa:aa:aa:aa:01", 4))
+	ap1 := apResponse(t, "ap1", "0c:ea:14:00:00:01", "UniFi", "aa:aa:aa:aa:aa:01", 9)
+	ap1.Neighbours.Batadv["0c:ea:14:00:00:01"].Neighbours["0c:ea:14:00:00:02"] = data.BatmanLink{TQ: 255}
+	nodes.Update("ap1", ap1)
+	assert.Equal("router", nodes.apRouter["ap1"])
+
+	nodes.Update("router", routerResponse(t, 20, 0, 0))
+	assert.Equal(uint32(7), nodes.List["router"].Statistics.Clients.Total)
+}
