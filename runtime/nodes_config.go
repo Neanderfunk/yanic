@@ -8,4 +8,8 @@ type NodesConfig struct {
 	OfflineAfter duration.Duration `toml:"offline_after"` // Set node to offline if not seen within this period
 	PruneAfter   duration.Duration `toml:"prune_after"`   // Remove nodes after n days of inactivity
 	Output       map[string]interface{}
+
+	// Lokaler Zusatz (Neanderfunk): software.firmware.base von Accesspoints
+	// hinter Freifunk-Routern, siehe accesspoints.go. Nicht gesetzt: "UniFi".
+	AccessPointFirmware []string `toml:"accesspoint_firmware"`
 }

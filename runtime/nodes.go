@@ -18,6 +18,7 @@ type Nodes struct {
 	ifaceToNodeID       map[string]string       // mapping from MAC address to NodeID
 	ifaceToLinkType     map[string]LinkType     // mapping from MAC address to LinkType
 	ifaceToLinkProtocol map[string]LinkProtocol // mapping from MAC address to LinkProtocol
+	apRouter            map[string]string       // Neanderfunk: Accesspoint-ID -> Router-ID
 	config              *NodesConfig
 	sync.RWMutex
 }
@@ -88,6 +89,11 @@ func (nodes *Nodes) Update(nodeID string, res *data.ResponseData) *Node {
 	node.Nodeinfo = res.Nodeinfo
 	node.Statistics = res.Statistics
 	node.CustomFields = res.CustomFields
+
+	// Lokaler Zusatz (Neanderfunk): Clients der Accesspoints beim Router abziehen
+	nodes.Lock()
+	nodes.accessPointUpdate(nodeID, node)
+	nodes.Unlock()
 
 	return node
 }
