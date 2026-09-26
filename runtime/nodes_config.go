@@ -16,4 +16,8 @@ type NodesConfig struct {
 	// Lokaler Zusatz (Neanderfunk): Aliase wie bei hopglass-server, siehe
 	// aliases.go. Leer: keine.
 	AliasesPath string `toml:"aliases_path"`
+
+	// Lokaler Zusatz (Neanderfunk): Verzeichnis mit Loeschauftraegen fuer
+	// Offline-Knoten, siehe removals.go. Leer: keine.
+	RemoveDir string `toml:"remove_dir"`
 }

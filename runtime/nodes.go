@@ -212,6 +212,8 @@ func (nodes *Nodes) worker() {
 		if nodes.loadAliases() {
 			nodes.applyAliasesAll()
 		}
+		// und Loeschauftraege fuer Offline-Knoten (removals.go)
+		nodes.processRemovals()
 		nodes.Unlock()
 		nodes.expire()
 		nodes.save()
