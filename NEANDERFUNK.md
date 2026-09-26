@@ -15,6 +15,8 @@ nachziehen.
 | Clients der Accesspoints beim Router abziehen | Clients hinter einem AP zählen einmal, nicht beim AP und beim Router |
 | Links der Accesspoints von beiden Seiten | Linie zwischen AP und Router mit voller Qualität, als Kabel |
 | Links zwischen zwei Accesspoints als Funk | AP-AP (UniFi-Mesh) bleibt Funk, nur AP-Router wird Kabel |
+| Aliase wie bei hopglass-server | `nodes.aliases_path`: Ort, Name usw. je node_id überschreiben, `"location": null` nimmt von der Landkarte; rücknehmbar |
+| Offline-Knoten entfernen | `nodes.remove_dir`: Löschaufträge aus dem Service-Menü, nur für Knoten, die offline sind |
 
 Die beiden letzten gehören zu
 [Neanderfunk/unifi_respondd](https://github.com/Neanderfunk/unifi_respondd):
