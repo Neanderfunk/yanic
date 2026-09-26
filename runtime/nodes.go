@@ -21,6 +21,10 @@ type Nodes struct {
 	apRouter            map[string]string       // Neanderfunk: Accesspoint-ID -> Router-ID
 	config              *NodesConfig
 	sync.RWMutex
+
+	// Lokaler Zusatz (Neanderfunk): Aliase (aliases.go)
+	aliases     map[string]json.RawMessage // node_id -> nodeinfo-Patch
+	aliasesTime time.Time                  // Stand der Aliasdatei
 }
 
 // NewNodes create Nodes structs
@@ -91,7 +95,10 @@ func (nodes *Nodes) Update(nodeID string, res *data.ResponseData) *Node {
 	node.CustomFields = res.CustomFields
 
 	// Lokaler Zusatz (Neanderfunk): Clients der Accesspoints beim Router abziehen
+	// und Aliase ueber die frisch gemeldete nodeinfo legen
 	nodes.Lock()
+	node.NodeinfoOriginal = nil
+	nodes.applyAlias(nodeID, node)
 	nodes.accessPointUpdate(nodeID, node)
 	nodes.Unlock()
 
@@ -200,6 +207,12 @@ func (nodes *Nodes) worker() {
 	c := time.Tick(nodes.config.SaveInterval.Duration)
 
 	for range c {
+		// Lokaler Zusatz (Neanderfunk): Aliase nachladen (aliases.go)
+		nodes.Lock()
+		if nodes.loadAliases() {
+			nodes.applyAliasesAll()
+		}
+		nodes.Unlock()
 		nodes.expire()
 		nodes.save()
 	}

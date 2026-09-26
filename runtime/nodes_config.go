@@ -12,4 +12,8 @@ type NodesConfig struct {
 	// Lokaler Zusatz (Neanderfunk): software.firmware.base von Accesspoints
 	// hinter Freifunk-Routern, siehe accesspoints.go. Nicht gesetzt: "UniFi".
 	AccessPointFirmware []string `toml:"accesspoint_firmware"`
+
+	// Lokaler Zusatz (Neanderfunk): Aliase wie bei hopglass-server, siehe
+	// aliases.go. Leer: keine.
+	AliasesPath string `toml:"aliases_path"`
 }

@@ -17,6 +17,10 @@ type Node struct {
 	Nodeinfo     *data.Nodeinfo         `json:"nodeinfo"`
 	Neighbours   *data.Neighbours       `json:"-"`
 	CustomFields map[string]interface{} `json:"custom_fields"`
+
+	// Lokaler Zusatz (Neanderfunk): die gemeldete nodeinfo, solange ein Alias
+	// darueber liegt (aliases.go)
+	NodeinfoOriginal *data.Nodeinfo `json:"nodeinfo_original,omitempty"`
 }
 
 // IsGateway returns whether the node is a gateway
