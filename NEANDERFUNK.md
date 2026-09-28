@@ -18,7 +18,7 @@ nachziehen.
 | Aliase wie bei hopglass-server | `nodes.aliases_path`: Ort, Name usw. je node_id überschreiben, `"location": null` nimmt von der Landkarte; rücknehmbar |
 | Offline-Knoten entfernen | `nodes.remove_dir`: Löschaufträge aus dem Service-Menü, nur für Knoten, die offline sind |
 
-Die beiden letzten gehören zu
+Die drei Commits zu den Accesspoints gehören zu
 [Neanderfunk/unifi_respondd](https://github.com/Neanderfunk/unifi_respondd):
 Accesspoints, die ein Stellvertreter meldet, hängen als LAN-Geräte hinter
 einem Freifunk-Router. Erkannt werden sie an `software.firmware.base`:
