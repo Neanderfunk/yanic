@@ -3,8 +3,9 @@
 Dieser Fork von [FreifunkBremen/yanic](https://codeberg.org/FreifunkBremen/yanic)
 sammelt die respondd-Daten für die Karte `neander.map.freifunk.space` von
 Freifunk Neanderland. Der Zweig `main` folgt unverändert dem Original, unsere
-Änderungen liegen im Zweig `neanderfunk`, je Funktion ein Commit auf dem
-Upstream-Stand `v1.9.0` (`91a8825`). Jeder Commit besteht die Tests für sich,
+Änderungen liegen im Zweig `neanderfunk`, je Funktion ein Commit, ursprünglich auf dem
+Upstream-Stand `v1.9.0` (`91a8825`), seitdem per Merge nachgezogen (zuletzt
+`89bd94c`, 04.05.2026). Jeder Commit besteht die Tests für sich,
 sie lassen sich also einzeln übernehmen oder bei einem Upstream-Update einzeln
 nachziehen.
 
@@ -34,10 +35,16 @@ verhält sich der Zweig wie das Original.
 
 Lizenz wie das Original: AGPL-3.0.
 
-Aktualisieren auf einen neuen Upstream-Stand:
+Aktualisieren auf einen neuen Upstream-Stand, per Merge, nicht per Rebase:
+auf die Commits dieses Zweigs verweisen veröffentlichte Links (etwa aus
+Forenbeiträgen), ein Rebase würde ihre IDs ändern und einen Force-Push
+brauchen. Seit 28.09.2026 (Upstream `89bd94c`) wird zusammengeführt.
 
 ```bash
 git fetch upstream
-git rebase <neuer-upstream-tag> neanderfunk
+git merge upstream/main
 go test ./...
 ```
+
+Welche Commits unsere sind, zeigt dann
+`git log --no-merges --first-parent v1.9.0..neanderfunk`.
