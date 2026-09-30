@@ -20,4 +20,8 @@ type NodesConfig struct {
 	// Lokaler Zusatz (Neanderfunk): Verzeichnis mit Loeschauftraegen fuer
 	// Offline-Knoten, siehe removals.go. Leer: keine.
 	RemoveDir string `toml:"remove_dir"`
+
+	// Lokaler Zusatz (Neanderfunk): Rahmen [sued, west, nord, ost] fuer die
+	// Ortsangaben, siehe locationbox.go. Leer: keine Pruefung.
+	LocationBBox []float64 `toml:"location_bbox"`
 }

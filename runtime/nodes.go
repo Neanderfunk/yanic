@@ -86,6 +86,15 @@ func (nodes *Nodes) Update(nodeID string, res *data.ResponseData) *Node {
 		}
 	}
 
+	// Lokaler Zusatz (Neanderfunk): vertauschte Ortsangaben, siehe locationbox.go
+	var vorher *data.Location
+	if node.NodeinfoOriginal != nil {
+		vorher = node.NodeinfoOriginal.Location
+	} else if node.Nodeinfo != nil {
+		vorher = node.Nodeinfo.Location
+	}
+	nodes.locationUpdate(nodeID, vorher, res.Nodeinfo)
+
 	// Update fields
 	node.Lastseen = now
 	node.Online = true
