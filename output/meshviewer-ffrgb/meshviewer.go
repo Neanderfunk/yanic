@@ -52,8 +52,10 @@ func transform(nodes *runtime.Nodes) *Meshviewer {
 			if link := links[key]; link != nil {
 				if switchSourceTarget {
 					link.TargetTQ = linkOrigin.TQ
+					link.TargetFrequency = linkOrigin.Frequency
 				} else {
 					link.SourceTQ = linkOrigin.TQ
+					link.SourceFrequency = linkOrigin.Frequency
 				}
 				continue
 			}
@@ -65,9 +67,13 @@ func transform(nodes *runtime.Nodes) *Meshviewer {
 				SourceTQ:      linkOrigin.TQ,
 				TargetTQ:      0,
 				Type:          linkOrigin.Type.String(),
+
+				SourceFrequency: linkOrigin.Frequency,
 			}
 
 			if switchSourceTarget {
+				link.SourceFrequency = 0
+				link.TargetFrequency = linkOrigin.Frequency
 				link.SourceTQ = 0
 				link.Source = linkOrigin.TargetID
 				link.SourceAddress = linkOrigin.TargetAddress

@@ -18,6 +18,7 @@ nachziehen.
 | Links zwischen zwei Accesspoints als Funk | AP-AP (UniFi-Mesh) bleibt Funk, nur AP-Router wird Kabel |
 | Aliase wie bei hopglass-server | `nodes.aliases_path`: Ort, Name usw. je node_id überschreiben, `"location": null` nimmt von der Landkarte; rücknehmbar |
 | Offline-Knoten entfernen | `nodes.remove_dir`: Löschaufträge aus dem Service-Menü, nur für Knoten, die offline sind |
+| Frequenz der WLAN-Links | `neighbours.wifi[<mac>].frequency` (Gluon-Patch respondd-wifi-frequency, wie 4830.org) als `source_frequency`/`target_frequency` je Link in meshviewer.json; optional, ohne Angabe fehlt das Feld |
 
 Die drei Commits zu den Accesspoints gehören zu
 [Neanderfunk/unifi_respondd](https://github.com/Neanderfunk/unifi_respondd):

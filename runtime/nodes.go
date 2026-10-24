@@ -164,6 +164,11 @@ func (nodes *Nodes) NodeLinks(node *Node) (result []Link) {
 				} else if lt, ok := nodes.ifaceToLinkType[neighbourMAC]; ok {
 					link.Type = lt
 				}
+				// Lokaler Zusatz: Frequenz der empfangenden Schnittstelle, wenn
+				// der Knoten sie meldet (neighbours.wifi[<mac>].frequency)
+				if w, ok := neighbours.Wifi[sourceMAC]; ok && w.Frequency > 0 {
+					link.Frequency = w.Frequency
+				}
 
 				result = append(result, link)
 			}

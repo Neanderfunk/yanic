@@ -78,6 +78,10 @@ type Link struct {
 	TargetTQ      float32 `json:"target_tq"`
 	SourceAddress string  `json:"source_addr"`
 	TargetAddress string  `json:"target_addr"`
+	// Lokaler Zusatz: Frequenz der Schnittstelle je Seite in MHz, nur wenn
+	// der Knoten sie meldet (Band eines WLAN-Links)
+	SourceFrequency int `json:"source_frequency,omitempty"`
+	TargetFrequency int `json:"target_frequency,omitempty"`
 }
 
 func NewNode(nodes *runtime.Nodes, n *runtime.Node) *Node {

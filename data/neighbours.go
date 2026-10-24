@@ -6,7 +6,12 @@ type Neighbours struct {
 	Babel  map[string]BabelNeighbours  `json:"babel"`
 	LLDP   map[string][]string         `json:"lldp"`
 	//WifiNeighbours map[string]WifiNeighbours   `json:"wifi"`
-	NodeID string `json:"node_id"`
+	// Lokaler Zusatz (Neanderfunk): je WLAN-Schnittstelle (Schluessel ist
+	// ihre MAC) nur die Frequenz, damit die Karte das Band eines Links zeigen
+	// kann. Die Nachbarwerte (Signal, Rauschen) bleiben draussen, sie wuerden
+	// nur den gespeicherten Zustand aufblaehen.
+	Wifi   map[string]WifiInterface `json:"wifi,omitempty"`
+	NodeID string                   `json:"node_id"`
 }
 
 // WifiLink struct
@@ -14,6 +19,13 @@ type WifiLink struct {
 	Inactive int `json:"inactive"`
 	Noise    int `json:"nois"`
 	Signal   int `json:"signal"`
+}
+
+// WifiInterface: Frequenz der WLAN-Schnittstelle in MHz. Optional, Gluon
+// meldet sie nur mit dem Patch respondd-wifi-frequency (4830.org,
+// Neanderfunk), aeltere Knoten gar nicht.
+type WifiInterface struct {
+	Frequency int `json:"frequency,omitempty"`
 }
 
 // BatmanLink struct

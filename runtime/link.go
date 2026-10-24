@@ -53,4 +53,6 @@ type Link struct {
 	TQ             float32
 	Type           LinkType
 	Protocol       LinkProtocol
+	// Lokaler Zusatz: Frequenz der Quellschnittstelle in MHz, 0 = unbekannt
+	Frequency int
 }
