@@ -16,7 +16,8 @@ package influxdb
 //   nf_wireless  txpower, channel, mesh (0/1)     Tags radio, ssid, htmode, country
 //   node         nf.ddhcpd.running/learning (0/1)
 //                nf.ddhcpd.blocks.*, .leases.*    Momentaufnahme
-//                nf.ddhcpd.roaming.*, .dhcp.*     Zaehler seit Start des Daemons
+//                nf.ddhcpd.roaming.*, .dhcp.*, .conflicts.*
+//                                                 Zaehler seit Start des Daemons
 //                nf.clients_ipv4.total/ddhcpd     Momentaufnahme
 //
 // Fehlt ein Wert, wird er nicht geschrieben (nicht als 0).
@@ -75,14 +76,10 @@ func nfNodeFields(nf *data.NeanderfunkStatistics, fields models.Fields) {
 		if v, ok := bit(d.Learning); ok {
 			fields["nf.ddhcpd.learning"] = v
 		}
-		// Schluessel wie vom Knoten gemeldet, neue Zaehler kommen ohne
-		// Aenderung hier an
-		for gruppe, werte := range map[string]map[string]any{
-			"blocks": d.Blocks, "leases": d.Leases, "roaming": d.Roaming, "dhcp": d.DHCP} {
+		// Gruppen und Schluessel wie vom Knoten gemeldet
+		for gruppe, werte := range d.Gruppen {
 			for k, v := range werte {
-				if zahl, ok := v.(float64); ok {
-					fields["nf.ddhcpd."+gruppe+"."+k] = zahl
-				}
+				fields["nf.ddhcpd."+gruppe+"."+k] = v
 			}
 		}
 	}

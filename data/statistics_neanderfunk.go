@@ -1,5 +1,7 @@
 package data
 
+import "encoding/json"
+
 // Neanderfunk-Erweiterung: statistics.neanderfunk aus dem Gluon-Paket
 // neanderfunk-respondd (Feed Neanderfunk/packages, ab bd33007, Temperatur ab
 // c5d5275). Lokaler Patch des Neanderfunk-Kartenservers, nicht upstream.
@@ -75,21 +77,77 @@ type NeanderfunkRadio struct {
 // Feed v2025.1.x 1977778). Fehlt ganz ohne das Paket. Antwortet der Daemon
 // nicht, kommt nur running=false, ohne learning und ohne die Gruppen.
 //
-// blocks und leases sind Momentaufnahmen, roaming und dhcp Zaehler seit dem
-// Start des Daemons (Reset bei dessen Neustart). Die Blocktabelle ist auf
-// allen Knoten einer Domain gleich: total = free + ours + claiming + foreign.
+// Gruppen (Stand Feed 7bb9700): blocks und leases sind Momentaufnahmen,
+// roaming, dhcp und conflicts Zaehler seit dem Start des Daemons (Reset bei
+// dessen Neustart). Die Blocktabelle ist auf allen Knoten einer Domain gleich:
+// total = free + ours + claiming + foreign + releasing. In der Lernphase
+// fehlen free, claiming, foreign und releasing.
 //
-// Die Gruppen als map[string]any: ein unerwarteter Wert (Text, Objekt) darf
-// nicht das Einlesen der ganzen Statistik scheitern lassen, sonst fehlt der
-// Knoten mit allen Werten (vgl. neighbours.wifi, Essen 11/2026). Genommen
-// werden nur Zahlen.
+// Jedes Objekt neben running/learning gilt als Gruppe, jede Zahl darin als
+// Wert: neue Gruppen und Schluessel kommen ohne Aenderung an yanic an. Was
+// keine Zahl ist, faellt einzeln weg und laesst nicht das Einlesen der ganzen
+// Statistik scheitern, sonst fehlte der Knoten mit allen Werten (vgl.
+// neighbours.wifi, Essen 11/2026).
 type NeanderfunkDDHCPD struct {
-	Running  *bool          `json:"running,omitempty"`
-	Learning *bool          `json:"learning,omitempty"`
-	Blocks   map[string]any `json:"blocks,omitempty"`
-	Leases   map[string]any `json:"leases,omitempty"`
-	Roaming  map[string]any `json:"roaming,omitempty"`
-	DHCP     map[string]any `json:"dhcp,omitempty"`
+	Running  *bool
+	Learning *bool
+	Gruppen  map[string]map[string]float64
+}
+
+// UnmarshalJSON liest tolerant, siehe NeanderfunkDDHCPD
+func (d *NeanderfunkDDHCPD) UnmarshalJSON(b []byte) error {
+	var roh map[string]json.RawMessage
+	if json.Unmarshal(b, &roh) != nil {
+		return nil
+	}
+	for name, wert := range roh {
+		switch name {
+		case "running", "learning":
+			var x bool
+			if json.Unmarshal(wert, &x) != nil {
+				continue
+			}
+			if name == "running" {
+				d.Running = &x
+			} else {
+				d.Learning = &x
+			}
+		default:
+			var gruppe map[string]any
+			if json.Unmarshal(wert, &gruppe) != nil {
+				continue
+			}
+			for k, v := range gruppe {
+				zahl, ok := v.(float64)
+				if !ok {
+					continue
+				}
+				if d.Gruppen == nil {
+					d.Gruppen = map[string]map[string]float64{}
+				}
+				if d.Gruppen[name] == nil {
+					d.Gruppen[name] = map[string]float64{}
+				}
+				d.Gruppen[name][k] = zahl
+			}
+		}
+	}
+	return nil
+}
+
+// MarshalJSON schreibt die Form vom Knoten zurueck (state-Datei von yanic)
+func (d NeanderfunkDDHCPD) MarshalJSON() ([]byte, error) {
+	aus := map[string]any{}
+	for name, gruppe := range d.Gruppen {
+		aus[name] = gruppe
+	}
+	if d.Running != nil {
+		aus["running"] = *d.Running
+	}
+	if d.Learning != nil {
+		aus["learning"] = *d.Learning
+	}
+	return json.Marshal(aus)
 }
 
 // NeanderfunkClientsIPv4 sind die lokalen Clients mit IPv4 laut ARP an
