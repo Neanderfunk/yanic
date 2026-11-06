@@ -160,3 +160,30 @@ func TestNeanderfunkDDHCPD(t *testing.T) {
 	assert.NotContains(f, "nf.ddhcpd.running")
 	assert.NotContains(f, "nf.clients_ipv4.total")
 }
+
+// Echtes Sample: Labor-Gluon G1 (x86-64, v2025.1.x-next 37759f0, ddhcpd
+// 8eed126, Domain 21 im Labor), 06.11.2026, von der Supernode-Session
+const nfDDHCPDLabor = `{"node_id":"deadbeef","neanderfunk":{
+ "ddhcpd":{"running":true,"learning":false,
+  "blocks":{"total":512,"ours":3,"free":506,"claiming":0,"foreign":3},
+  "leases":{"total":12,"leased":1,"offered":0,"free":11,"away":0},
+  "roaming":{"in":0,"out":0,"ack_sent":0,"ack_received":0,"nak_sent":0,"nak_received":0},
+  "dhcp":{"discover":51,"offer":27,"request":28,"ack":26,"nak":2,"release":0,"inform":0}},
+ "clients_ipv4":{"total":0,"ddhcpd":0}}}`
+
+func TestNeanderfunkDDHCPDLabor(t *testing.T) {
+	assert := assert.New(t)
+	f, _ := punkte(t, nfDDHCPDLabor)["node"][0].Fields()
+	assert.EqualValues(512, f["nf.ddhcpd.blocks.total"])
+	summe := 0.0
+	for _, k := range []string{"free", "ours", "claiming", "foreign", "releasing"} {
+		if v, ok := f["nf.ddhcpd.blocks."+k].(float64); ok {
+			summe += v
+		}
+	}
+	assert.EqualValues(512, summe, "total = free + ours + claiming + foreign (+ releasing)")
+	assert.EqualValues(12, f["nf.ddhcpd.leases.total"])
+	assert.EqualValues(51, f["nf.ddhcpd.dhcp.discover"])
+	assert.EqualValues(0, f["nf.clients_ipv4.total"])
+	assert.NotContains(f, "nf.ddhcpd.blocks.releasing", "aelterer Daemon ohne releasing")
+}
