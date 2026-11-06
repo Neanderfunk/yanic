@@ -93,3 +93,49 @@ func TestNeanderfunkFehlt(t *testing.T) {
 	assert.NotContains(f, "nf.refault_file")
 	assert.Empty(z["nf_temperature"])
 }
+
+// Host-Test der Packages-Session (respondd gegen echten ddhcpd im Namespace),
+// 06.11.2026, kein echter Knoten
+const nfDDHCPD = `{"node_id":"deadbeef","neanderfunk":{
+ "ddhcpd":{"running":true,"learning":false,
+  "blocks":{"total":64,"free":62,"ours":1,"claiming":1,"foreign":0},
+  "leases":{"total":4,"leased":2,"offered":0,"free":2,"away":1},
+  "roaming":{"in":0,"out":0,"ack_sent":0,"ack_received":0,"nak_sent":0,"nak_received":0},
+  "dhcp":{"discover":2,"offer":2,"request":2,"ack":2,"nak":0,"release":0,"inform":0}},
+ "clients_ipv4":{"total":2,"ddhcpd":1}}}`
+
+func TestNeanderfunkDDHCPD(t *testing.T) {
+	assert := assert.New(t)
+	f, _ := punkte(t, nfDDHCPD)["node"][0].Fields()
+	assert.EqualValues(1, f["nf.ddhcpd.running"])
+	assert.EqualValues(0, f["nf.ddhcpd.learning"])
+	assert.EqualValues(64, f["nf.ddhcpd.blocks.total"])
+	assert.EqualValues(0, f["nf.ddhcpd.blocks.foreign"])
+	assert.EqualValues(1, f["nf.ddhcpd.leases.away"])
+	assert.EqualValues(0, f["nf.ddhcpd.roaming.in"])
+	assert.EqualValues(2, f["nf.ddhcpd.dhcp.ack"])
+	assert.EqualValues(2, f["nf.clients_ipv4.total"])
+	assert.EqualValues(1, f["nf.clients_ipv4.ddhcpd"])
+
+	// Daemon antwortet nicht: nur running, keine erfundenen Nullen
+	f, _ = punkte(t, `{"node_id":"deadbeef","neanderfunk":{"ddhcpd":{"running":false},
+	 "clients_ipv4":{"total":3,"ddhcpd":0}}}`)["node"][0].Fields()
+	assert.EqualValues(0, f["nf.ddhcpd.running"])
+	assert.NotContains(f, "nf.ddhcpd.learning")
+	assert.NotContains(f, "nf.ddhcpd.blocks.total")
+	assert.EqualValues(0, f["nf.clients_ipv4.ddhcpd"])
+
+	// fremde Werte in einer Gruppe: der Rest kommt trotzdem an
+	z := punkte(t, `{"node_id":"deadbeef","loadavg":0.5,"neanderfunk":{"ddhcpd":{"running":true,
+	 "blocks":{"total":64,"neu":"text","tief":{"x":1}}}}}`)
+	f, _ = z["node"][0].Fields()
+	assert.EqualValues(64, f["nf.ddhcpd.blocks.total"])
+	assert.NotContains(f, "nf.ddhcpd.blocks.neu")
+	assert.NotContains(f, "nf.ddhcpd.blocks.tief")
+	assert.EqualValues(0.5, f["load"])
+
+	// ohne Paket
+	f, _ = punkte(t, `{"node_id":"deadbeef","neanderfunk":{"system":{"forks":5}}}`)["node"][0].Fields()
+	assert.NotContains(f, "nf.ddhcpd.running")
+	assert.NotContains(f, "nf.clients_ipv4.total")
+}

@@ -14,6 +14,10 @@ package influxdb
 //   nf_ethernet  carrier (0/1), speed, possible   Tags port, duplex
 //   nf_temperature  celsius                       Tag sensor
 //   nf_wireless  txpower, channel, mesh (0/1)     Tags radio, ssid, htmode, country
+//   node         nf.ddhcpd.running/learning (0/1)
+//                nf.ddhcpd.blocks.*, .leases.*    Momentaufnahme
+//                nf.ddhcpd.roaming.*, .dhcp.*     Zaehler seit Start des Daemons
+//                nf.clients_ipv4.total/ddhcpd     Momentaufnahme
 //
 // Fehlt ein Wert, wird er nicht geschrieben (nicht als 0).
 // system.mem_available doppelt memory.available und bleibt weg.
@@ -63,6 +67,28 @@ func nfNodeFields(nf *data.NeanderfunkStatistics, fields models.Fields) {
 		setze(fields, "nf.ssid_changer.gateway_losses", sc.GatewayLosses)
 		setze(fields, "nf.ssid_changer.offline", sc.Offline)
 		setze(fields, "nf.ssid_changer.switches", sc.Switches)
+	}
+	if d := nf.DDHCPD; d != nil {
+		if v, ok := bit(d.Running); ok {
+			fields["nf.ddhcpd.running"] = v
+		}
+		if v, ok := bit(d.Learning); ok {
+			fields["nf.ddhcpd.learning"] = v
+		}
+		// Schluessel wie vom Knoten gemeldet, neue Zaehler kommen ohne
+		// Aenderung hier an
+		for gruppe, werte := range map[string]map[string]any{
+			"blocks": d.Blocks, "leases": d.Leases, "roaming": d.Roaming, "dhcp": d.DHCP} {
+			for k, v := range werte {
+				if zahl, ok := v.(float64); ok {
+					fields["nf.ddhcpd."+gruppe+"."+k] = zahl
+				}
+			}
+		}
+	}
+	if c := nf.ClientsIPv4; c != nil {
+		setze(fields, "nf.clients_ipv4.total", c.Total)
+		setze(fields, "nf.clients_ipv4.ddhcpd", c.DDHCPD)
 	}
 }
 

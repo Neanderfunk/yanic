@@ -19,7 +19,9 @@ type NeanderfunkStatistics struct {
 	SSIDChanger *NeanderfunkSSIDChanger         `json:"ssid_changer,omitempty"`
 	Wireless    map[string]*NeanderfunkRadio    `json:"wireless,omitempty"`
 	// Schluessel ist der Sensor (soc, mt7915_phy0, ...), Wert in Grad Celsius
-	Temperature map[string]*float64 `json:"temperature,omitempty"`
+	Temperature map[string]*float64     `json:"temperature,omitempty"`
+	DDHCPD      *NeanderfunkDDHCPD      `json:"ddhcpd,omitempty"`
+	ClientsIPv4 *NeanderfunkClientsIPv4 `json:"clients_ipv4,omitempty"`
 }
 
 // NeanderfunkSystem ist statistics.neanderfunk.system
@@ -67,4 +69,33 @@ type NeanderfunkRadio struct {
 	Mesh    *bool    `json:"mesh,omitempty"`
 	HTMode  string   `json:"htmode,omitempty"`
 	Country string   `json:"country,omitempty"`
+}
+
+// NeanderfunkDDHCPD ist statistics.neanderfunk.ddhcpd (verteilter DHCP, ab
+// Feed v2025.1.x 1977778). Fehlt ganz ohne das Paket. Antwortet der Daemon
+// nicht, kommt nur running=false, ohne learning und ohne die Gruppen.
+//
+// blocks und leases sind Momentaufnahmen, roaming und dhcp Zaehler seit dem
+// Start des Daemons (Reset bei dessen Neustart). Die Blocktabelle ist auf
+// allen Knoten einer Domain gleich: total = free + ours + claiming + foreign.
+//
+// Die Gruppen als map[string]any: ein unerwarteter Wert (Text, Objekt) darf
+// nicht das Einlesen der ganzen Statistik scheitern lassen, sonst fehlt der
+// Knoten mit allen Werten (vgl. neighbours.wifi, Essen 11/2026). Genommen
+// werden nur Zahlen.
+type NeanderfunkDDHCPD struct {
+	Running  *bool          `json:"running,omitempty"`
+	Learning *bool          `json:"learning,omitempty"`
+	Blocks   map[string]any `json:"blocks,omitempty"`
+	Leases   map[string]any `json:"leases,omitempty"`
+	Roaming  map[string]any `json:"roaming,omitempty"`
+	DHCP     map[string]any `json:"dhcp,omitempty"`
+}
+
+// NeanderfunkClientsIPv4 sind die lokalen Clients mit IPv4 laut ARP an
+// local-node; ddhcpd = davon aus ddhcpd.range der Domain, der Rest vom Kea
+// des Supernodes. Nicht vergleichbar mit clients.total (andere Quelle).
+type NeanderfunkClientsIPv4 struct {
+	Total  *float64 `json:"total,omitempty"`
+	DDHCPD *float64 `json:"ddhcpd,omitempty"`
 }
