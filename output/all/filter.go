@@ -8,4 +8,5 @@ import (
 	_ "github.com/FreifunkBremen/yanic/output/filter/inarea"
 	_ "github.com/FreifunkBremen/yanic/output/filter/noowner"
 	_ "github.com/FreifunkBremen/yanic/output/filter/site"
+	_ "github.com/FreifunkBremen/yanic/output/filter/siteordomain"
 )
