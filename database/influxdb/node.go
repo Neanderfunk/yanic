@@ -140,6 +140,9 @@ func (conn *Connection) InsertNode(node *runtime.Node) {
 		fields["stat.cpu.iowait"] = procstat.CPU.IOWait
 		fields["stat.cpu.irq"] = procstat.CPU.IRQ
 		fields["stat.cpu.softirq"] = procstat.CPU.SoftIRQ
+		if procstat.CPU.Steal != nil {
+			fields["stat.cpu.steal"] = *procstat.CPU.Steal
+		}
 		fields["stat.intr"] = procstat.Intr
 		fields["stat.ctxt"] = procstat.ContextSwitches
 		fields["stat.softirq"] = procstat.SoftIRQ

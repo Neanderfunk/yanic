@@ -120,4 +120,6 @@ type ProcStatsCPU struct {
 	IOWait  int64 `json:"iowait"`
 	IRQ     int64 `json:"irq"`
 	SoftIRQ int64 `json:"softirq"`
+	// steal: nur Server-VMs (Supernodes), Gluon meldet es nicht
+	Steal *int64 `json:"steal,omitempty"`
 }
