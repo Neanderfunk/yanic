@@ -21,9 +21,10 @@ type NeanderfunkStatistics struct {
 	SSIDChanger *NeanderfunkSSIDChanger         `json:"ssid_changer,omitempty"`
 	Wireless    map[string]*NeanderfunkRadio    `json:"wireless,omitempty"`
 	// Schluessel ist der Sensor (soc, mt7915_phy0, ...), Wert in Grad Celsius
-	Temperature map[string]*float64     `json:"temperature,omitempty"`
-	DDHCPD      *NeanderfunkDDHCPD      `json:"ddhcpd,omitempty"`
-	ClientsIPv4 *NeanderfunkClientsIPv4 `json:"clients_ipv4,omitempty"`
+	Temperature  map[string]*float64      `json:"temperature,omitempty"`
+	DDHCPD       *NeanderfunkDDHCPD       `json:"ddhcpd,omitempty"`
+	ClientsIPv4  *NeanderfunkClientsIPv4  `json:"clients_ipv4,omitempty"`
+	DomainHelper *NeanderfunkDomainHelper `json:"domainhelper,omitempty"`
 }
 
 // NeanderfunkSystem ist statistics.neanderfunk.system
@@ -156,4 +157,83 @@ func (d NeanderfunkDDHCPD) MarshalJSON() ([]byte, error) {
 type NeanderfunkClientsIPv4 struct {
 	Total  *float64 `json:"total,omitempty"`
 	DDHCPD *float64 `json:"ddhcpd,omitempty"`
+}
+
+// NeanderfunkDomainHelper ist statistics.neanderfunk.domainhelper (Gluon-Paket
+// neanderfunk-domainhelper ab 0.12, neanderfunk-respondd 2, Feed b99b4e6).
+// Fehlt im Normalfall ganz und enthaelt nur die Teile, die gerade gelten.
+// Alter in Sekunden, last_switch.time als Unix-Zeit vom Knoten (ohne NTP vor
+// dem Wechsel kann sie falsch sein). last_switch steht im Flash und bleibt
+// ueber Neustart und sysupgrade stehen.
+//
+// Tolerant gelesen wie ddhcpd: ein Teil mit falschem Typ faellt einzeln weg,
+// statt das Einlesen der ganzen Statistik scheitern zu lassen.
+type NeanderfunkDomainHelper struct {
+	Bridge     *NeanderfunkDHBridge     `json:"bridge,omitempty"`
+	Follow     *NeanderfunkDHFollow     `json:"follow,omitempty"`
+	Island     *NeanderfunkDHIsland     `json:"island,omitempty"`
+	LastSwitch *NeanderfunkDHLastSwitch `json:"last_switch,omitempty"`
+}
+
+// NeanderfunkDHBridge: Domainbruecke am Kabel. State bridge (gesehen, bleibt,
+// Grund in Note) oder cut (getrennt); Domain und Node sind der fremde Nachbar.
+type NeanderfunkDHBridge struct {
+	State  string   `json:"state,omitempty"`
+	Where  string   `json:"where,omitempty"`
+	Domain string   `json:"domain,omitempty"`
+	Node   string   `json:"node,omitempty"`
+	Note   string   `json:"note,omitempty"`
+	Age    *float64 `json:"age,omitempty"`
+}
+
+// NeanderfunkDHFollow: das Netz kommt aus Domain, Regel R1 (Kabel) oder R2
+// (nur fremde Gateways); Wechsel, wenn Age Wait erreicht.
+type NeanderfunkDHFollow struct {
+	Domain string   `json:"domain,omitempty"`
+	Rule   string   `json:"rule,omitempty"`
+	Age    *float64 `json:"age,omitempty"`
+	Wait   *float64 `json:"wait,omitempty"`
+}
+
+// NeanderfunkDHIsland: kein Gateway seit Age Sekunden
+type NeanderfunkDHIsland struct {
+	Age *float64 `json:"age,omitempty"`
+}
+
+// NeanderfunkDHLastSwitch: letzter Domainwechsel, How ist follow-R1,
+// follow-R2, island, lan_switch oder nodeplacer
+type NeanderfunkDHLastSwitch struct {
+	From string   `json:"from,omitempty"`
+	To   string   `json:"to,omitempty"`
+	How  string   `json:"how,omitempty"`
+	Time *float64 `json:"time,omitempty"`
+}
+
+// UnmarshalJSON liest tolerant, siehe NeanderfunkDomainHelper
+func (d *NeanderfunkDomainHelper) UnmarshalJSON(b []byte) error {
+	var roh map[string]json.RawMessage
+	if json.Unmarshal(b, &roh) != nil {
+		return nil
+	}
+	lies := func(name string, ziel any) bool {
+		w, ok := roh[name]
+		return ok && json.Unmarshal(w, ziel) == nil
+	}
+	var br NeanderfunkDHBridge
+	if lies("bridge", &br) {
+		d.Bridge = &br
+	}
+	var fo NeanderfunkDHFollow
+	if lies("follow", &fo) {
+		d.Follow = &fo
+	}
+	var is NeanderfunkDHIsland
+	if lies("island", &is) {
+		d.Island = &is
+	}
+	var ls NeanderfunkDHLastSwitch
+	if lies("last_switch", &ls) {
+		d.LastSwitch = &ls
+	}
+	return nil
 }

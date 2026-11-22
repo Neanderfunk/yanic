@@ -19,6 +19,11 @@ package influxdb
 //                nf.ddhcpd.roaming.*, .dhcp.*, .conflicts.*
 //                                                 Zaehler seit Start des Daemons
 //                nf.clients_ipv4.total/ddhcpd     Momentaufnahme
+//   nf_domainhelper_last_switch  time (Unix-Zeit vom Knoten)  Tags from, to, how
+//   nf_domainhelper_bridge  age    Tags state, where, peer_domain, peer_node, note
+//   nf_domainhelper_follow  age, wait                       Tags follow_domain, rule
+//   nf_domainhelper_island  age
+//                (domainhelper: nur solange der Knoten den Teil meldet)
 //
 // Fehlt ein Wert, wird er nicht geschrieben (nicht als 0).
 // system.mem_available doppelt memory.available und bleibt weg.
@@ -35,7 +40,22 @@ const (
 	MeasurementNFEthernet    = "nf_ethernet"
 	MeasurementNFTemperature = "nf_temperature"
 	MeasurementNFWireless    = "nf_wireless"
+	MeasurementNFDHSwitch    = "nf_domainhelper_last_switch"
+	MeasurementNFDHBridge    = "nf_domainhelper_bridge"
+	MeasurementNFDHFollow    = "nf_domainhelper_follow"
+	MeasurementNFDHIsland    = "nf_domainhelper_island"
 )
+
+// mitTags haengt nicht-leere Werte als Tags an eine Kopie
+func mitTags(tags models.Tags, werte map[string]string) models.Tags {
+	tg := tags.Clone()
+	for k, v := range werte {
+		if v != "" {
+			tg.SetString(k, v)
+		}
+	}
+	return tg
+}
 
 func setze(fields models.Fields, name string, wert *float64) {
 	if wert != nil {
@@ -142,5 +162,38 @@ func (conn *Connection) nfPoints(nf *data.NeanderfunkStatistics, tags models.Tag
 			}
 		}
 		conn.addPoint(MeasurementNFWireless, tg, f, t)
+	}
+
+	if dh := nf.DomainHelper; dh != nil {
+		conn.nfDomainHelper(dh, tags, t)
+	}
+}
+
+// nfDomainHelper schreibt die Teile von statistics.neanderfunk.domainhelper.
+// Die Domain des Nachbarn und des follow-Ziels heissen peer_domain und
+// follow_domain, damit sie nicht wie die Domain des Knotens aussehen.
+func (conn *Connection) nfDomainHelper(dh *data.NeanderfunkDomainHelper, tags models.Tags, t time.Time) {
+	if ls := dh.LastSwitch; ls != nil && ls.Time != nil {
+		conn.addPoint(MeasurementNFDHSwitch,
+			mitTags(tags, map[string]string{"from": ls.From, "to": ls.To, "how": ls.How}),
+			models.Fields{"time": *ls.Time}, t)
+	}
+	if b := dh.Bridge; b != nil && b.Age != nil {
+		conn.addPoint(MeasurementNFDHBridge,
+			mitTags(tags, map[string]string{"state": b.State, "where": b.Where,
+				"peer_domain": b.Domain, "peer_node": b.Node, "note": b.Note}),
+			models.Fields{"age": *b.Age}, t)
+	}
+	if f := dh.Follow; f != nil {
+		fl := models.Fields{}
+		setze(fl, "age", f.Age)
+		setze(fl, "wait", f.Wait)
+		if len(fl) > 0 {
+			conn.addPoint(MeasurementNFDHFollow,
+				mitTags(tags, map[string]string{"follow_domain": f.Domain, "rule": f.Rule}), fl, t)
+		}
+	}
+	if i := dh.Island; i != nil && i.Age != nil {
+		conn.addPoint(MeasurementNFDHIsland, tags.Clone(), models.Fields{"age": *i.Age}, t)
 	}
 }

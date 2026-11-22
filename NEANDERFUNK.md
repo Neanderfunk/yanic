@@ -20,6 +20,7 @@ nachziehen.
 | Offline-Knoten entfernen | `nodes.remove_dir`: Löschaufträge aus dem Service-Menü, nur für Knoten, die offline sind |
 | Frequenz der WLAN-Links | `neighbours.wifi[<mac>].frequency` (Gluon-Patch respondd-wifi-frequency, wie 4830.org) als `source_frequency`/`target_frequency` je Link in meshviewer.json; optional, ohne Angabe fehlt das Feld. `wifi` wird tolerant gelesen: was kein Objekt ist (aeltere Gluon-Versionen schicken Arrays), zaehlt als keine Angabe, statt die Antwort zu verwerfen |
 | CPU-steal | `statistics.stat.cpu.steal` (Supernodes, mesh-announce) als `stat.cpu.steal`; fehlt es, wie bei Gluon, wird nichts geschrieben |
+| domainhelper | `statistics.neanderfunk.domainhelper` (neanderfunk-domainhelper 0.12) als eigene Messungen `nf_domainhelper_last_switch` (Feld `time`, Tags `from`/`to`/`how`), `_bridge`, `_follow`, `_island`; nur geschrieben, solange der Knoten den Teil meldet. Tolerant gelesen: ein Teil mit falschem Typ faellt einzeln weg |
 | Filter site_or_domain | Liste von Codes: durch kommt, wessen site_code darin steht, oder wer einen site_code hat und dessen domain_code darin steht. Alte Single-Domain-Knoten (`nef-10_wlf`) und Multi-Domain-Knoten (`ffnef` + `10_wlf`) landen so in derselben Ortsausgabe, Supernodes (nur domain_code) nicht. Veraendert den Knoten nicht, anders als domain_as_site |
 
 Die drei Commits zu den Accesspoints gehören zu
